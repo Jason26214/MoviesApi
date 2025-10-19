@@ -1,13 +1,18 @@
 const path = require('path');
+
 const envPath = path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`);
 require('dotenv').config({ path: envPath });
+
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const v1Router = require('./routers');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// as the first middleware to set security headers
+app.use(helmet());
 // a json middleware
 app.use(express.json());
 // cors middleware
