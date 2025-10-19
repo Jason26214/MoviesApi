@@ -6,6 +6,10 @@ require('dotenv').config({ path: envPath });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+
+const morganMiddleware = require('./middleware/morgan');
+const { logger } = require('./utils/logger');
+
 const v1Router = require('./routers');
 
 const app = express();
@@ -13,7 +17,9 @@ const PORT = process.env.PORT || 3000;
 
 // as the first middleware to set security headers
 app.use(helmet());
-// a json middleware
+// morganMiddleware
+app.use(morganMiddleware);
+// json middleware
 app.use(express.json());
 // cors middleware
 app.use(cors());
@@ -22,5 +28,5 @@ app.use(cors());
 app.use('/v1', v1Router);
 
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  logger.info(`Server is running at http://localhost:${PORT}`);
 });
