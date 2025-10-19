@@ -1,2 +1,18 @@
+# Dependencies
 node_modules/
+
+# Environment Variables
 .env
+.env.*
+
+# 但是，不要忽略 .env.example 文件。这是一个重要的模板文件！
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Production builds
+dist/
+build/
