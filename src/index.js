@@ -5,6 +5,7 @@ require('dotenv').config({ path: envPath });
 
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const helmet = require('helmet');
 
 const morganMiddleware = require('./middleware/morgan');
@@ -17,12 +18,10 @@ const PORT = process.env.PORT || 3000;
 
 // as the first middleware to set security headers
 app.use(helmet());
-// morganMiddleware
 app.use(morganMiddleware);
-// json middleware
 app.use(express.json());
-// cors middleware
 app.use(cors());
+app.use(compression());
 
 // Mount v1Router
 app.use('/v1', v1Router);
