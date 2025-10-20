@@ -4,7 +4,115 @@ let nextMovieId = 1;
 let nextReviewId = 1;
 
 /**
- * Create a new movie
+ * @swagger
+ * components:
+ *   schemas:
+ *     Movie:
+ *       type: object
+ *       required:
+ *         - title
+ *         - description
+ *         - types
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: Automatically generated movie ID
+ *         title:
+ *           type: string
+ *           description: Movie title
+ *         description:
+ *           type: string
+ *           description: Movie description
+ *         types:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: Movie genres
+ *         averageRating:
+ *           type: number
+ *           format: float
+ *           description: Average rating of the movie
+ *         reviews:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Review'
+ *           description: List of reviews for the movie
+ *     Review:
+ *       type: object
+ *       required:
+ *         - rating
+ *         - content
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: Automatically generated review ID
+ *         rating:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 5
+ *           description: Rating given to the movie (1-5)
+ *         content:
+ *           type: string
+ *           description: Review content
+ *     NewMovie:
+ *       type: object
+ *       required:
+ *         - title
+ *         - description
+ *         - types
+ *       properties:
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *         types:
+ *           type: array
+ *           items:
+ *             type: string
+ *     NewReview:
+ *       type: object
+ *       required:
+ *         - rating
+ *         - content
+ *       properties:
+ *         rating:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 5
+ *         content:
+ *           type: string
+ */
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Movies
+ *     description: Movie management API
+ *   - name: Reviews
+ *     description: Movie review management API
+ */
+
+/**
+ * @swagger
+ * /v1/movies:
+ *   post:
+ *     summary: Create a new movie
+ *     tags: [Movies]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/NewMovie'
+ *     responses:
+ *       201:
+ *         description: Movie successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Movie'
+ *       400:
+ *         description: Invalid request body
  */
 const createMovie = (req, res) => {
   const { title, description, types } = req.body;
@@ -34,7 +142,23 @@ const createMovie = (req, res) => {
 };
 
 /**
- * Delete a movie by ID
+ * @swagger
+ * /v1/movies/{id}:
+ *   delete:
+ *     summary: Delete a movie by its ID
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the movie to be deleted
+ *     responses:
+ *       204:
+ *         description: Movie deleted successfully, no content returned
+ *       404:
+ *         description: Movie not found
  */
 const deleteMovie = (req, res) => {
   const movieId = parseInt(req.params.id);
@@ -49,7 +173,35 @@ const deleteMovie = (req, res) => {
 };
 
 /**
- * Post a review for a movie by ID
+ * @swagger
+ * /v1/movies/{id}/reviews:
+ *   post:
+ *     summary: Create a review for a movie
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the movie to review
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/NewReview'
+ *     responses:
+ *       201:
+ *         description: Review successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Review'
+ *       400:
+ *         description: Invalid request body
+ *       404:
+ *         description: Movie not found
  */
 const createReview = (req, res) => {
   const movie = movies.find((movie) => movie.id === parseInt(req.params.id));
@@ -88,7 +240,44 @@ const createReview = (req, res) => {
 };
 
 /**
- * Get movie list with filtering, sorting, and pagination
+ * @swagger
+ * /v1/movies:
+ *   get:
+ *     summary: Get list of movies with filtering, sorting, and pagination
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: query
+ *         name: keyword
+ *         schema:
+ *           type: string
+ *         description: Keyword to filter movies by title or description
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [rating, -rating]
+ *         description: Sort by rating (ascending) or -rating (descending)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of movies per page
+ *     responses:
+ *       200:
+ *         description: List of movies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Movie'
  */
 const getMovies = (req, res) => {
   // Extract query parameters
@@ -126,7 +315,27 @@ const getMovies = (req, res) => {
 };
 
 /**
- * Get a movie by ID
+ * @swagger
+ * /v1/movies/{id}:
+ *   get:
+ *     summary: Get a movie by ID
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the movie to retrieve
+ *     responses:
+ *       200:
+ *         description: Movie details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Movie'
+ *       404:
+ *         description: Movie not found
  */
 const getMovieById = (req, res) => {
   const movie = movies.find((m) => m.id === parseInt(req.params.id));
@@ -139,7 +348,44 @@ const getMovieById = (req, res) => {
 };
 
 /**
- * Put a movie by ID
+ * @swagger
+ * /v1/movies/{id}:
+ *   put:
+ *     summary: Update a movie by ID
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the movie to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               types:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Movie successfully updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Movie'
+ *       400:
+ *         description: Invalid request body
+ *       404:
+ *         description: Movie not found
  */
 const updateMovie = (req, res) => {
   const movie = movies.find((m) => m.id === parseInt(req.params.id));
@@ -164,7 +410,29 @@ const updateMovie = (req, res) => {
 };
 
 /**
- * Get all reviews for a specific movie
+ * @swagger
+ * /v1/movies/{id}/reviews:
+ *   get:
+ *     summary: Get all reviews for a specific movie
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the movie to get reviews for
+ *     responses:
+ *       200:
+ *         description: List of reviews for the movie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Review'
+ *       404:
+ *         description: Movie not found
  */
 const getMovieReviews = (req, res) => {
   const movie = movies.find((m) => m.id === parseInt(req.params.id));
