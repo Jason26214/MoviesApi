@@ -1,7 +1,5 @@
-const path = require('path');
-
-const envPath = path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`);
-require('dotenv').config({ path: envPath });
+const config = require('./utils/config');
+const connectToDB = require('./utils/db');
 
 const express = require('express');
 const cors = require('cors');
@@ -17,20 +15,19 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./utils/swagger');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// as the first middleware to set security headers
+const PORT = config.PORT;
+
 app.use(helmet());
 app.use(morganMiddleware);
 app.use(express.json());
 app.use(cors());
 app.use(compression());
 
-// swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// Mount v1Router
 app.use('/v1', v1Router);
+
+connectToDB();
 
 app.listen(PORT, () => {
   logger.info(`Server is running at http://localhost:${PORT}`);

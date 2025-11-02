@@ -1,23 +1,36 @@
 const winston = require('winston');
+const path = require('path');
+const config = require('./config');
 
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.printf(({ timestamp, level, message }) => {
-      return `[${timestamp}] [${level}] [${message}]`;
-    })
-  ),
-  transports: [
-    new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
-    }),
-    new winston.transports.File({
-      filename: 'logs/combined.log',
-    }),
-    new winston.transports.Console(),
-  ],
-});
+const createLogger = (filename) => {
+  const logger = winston.createLogger({
+    // read log level from .env
+    level: config.LOG_LEVEL || 'info',
+    defaultMeta: {
+      file: filename ? path.basename(filename) : undefined,
+    },
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.printf(({ timestamp, level, message, file }) => {
+        // add file's name in logger
+        return `[${timestamp}]${
+          file ? ` [${file}]` : ''
+        } [${level}] [${message}]`;
+      })
+    ),
+    transports: [
+      new winston.transports.File({
+        filename: 'logs/error.log',
+        level: 'error',
+      }),
+      new winston.transports.File({
+        filename: 'logs/combined.log',
+      }),
+      new winston.transports.Console(),
+    ],
+  });
 
-module.exports = { logger };
+  return logger;
+};
+
+module.exports = { logger: createLogger(), createLogger };
