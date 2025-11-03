@@ -1,7 +1,8 @@
-// In-memory data store
-const movies = [];
-let nextMovieId = 1;
-let nextReviewId = 1;
+// import the Movie model
+const Movie = require('../models/movie.model');
+const { createLogger } = require('../utils/logger');
+
+const logger = createLogger(__filename);
 
 /**
  * @swagger
@@ -95,6 +96,130 @@ let nextReviewId = 1;
 /**
  * @swagger
  * /v1/movies:
+ *   get:
+ *     summary: Get list of movies with filtering, sorting, and pagination
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: query
+ *         name: keyword
+ *         schema:
+ *           type: string
+ *         description: Keyword to filter movies by title or description
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [rating, -rating]
+ *         description: Sort by rating (ascending) or -rating (descending)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of movies per page
+ *     responses:
+ *       200:
+ *         description: List of movies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Movie'
+ */
+const getMovies = async (req, res) => {
+  try {
+    // Extract query parameters
+    let { keyword, sort, page, limit } = req.query;
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
+
+    // Mongoose filter object
+    const filter = {};
+    if (keyword) {
+      filter.$or = [
+        { title: { $regex: keyword, $options: 'i' } },
+        { description: { $regex: keyword, $options: 'i' } },
+      ];
+    }
+
+    // Mongoose sort object
+    const sortOption = {};
+    if (sort === 'rating') {
+      sortOption.averageRating = 1; // Ascending
+    } else if (sort === '-rating') {
+      sortOption.averageRating = -1; // Descending
+    }
+
+    // Pagination
+    const skip = (page - 1) * limit;
+
+    // Chain execution queries
+    const movies = await Movie.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    // Status and return
+    res.status(200).json(movies);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: 'Error fetching movies', error: error.message });
+  }
+};
+
+/**
+ * @swagger
+ * /v1/movies/{id}:
+ *   get:
+ *     summary: Get a movie by ID
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the movie to retrieve
+ *     responses:
+ *       200:
+ *         description: Movie details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Movie'
+ *       404:
+ *         description: Movie not found
+ */
+const getMovieById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const movie = await Movie.findById(id);
+
+    // If the database does not find a document corresponding to that _id, it will not throw an error, but will return null.
+    if (!movie) {
+      return res.status(404).json({ message: 'Movie not found' });
+    }
+
+    res.status(200).json(movie);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: 'Error fetching movie by ID', error: error.message });
+  }
+};
+
+/**
+ * @swagger
+ * /v1/movies:
  *   post:
  *     summary: Create a new movie
  *     tags: [Movies]
@@ -114,31 +239,107 @@ let nextReviewId = 1;
  *       400:
  *         description: Invalid request body
  */
-const createMovie = (req, res) => {
-  const { title, description, types } = req.body;
+const createMovie = async (req, res) => {
+  try {
+    const { title, description, types } = req.body;
 
-  // Validate request body
-  if (!title || !description || !Array.isArray(types) || types.length === 0) {
-    return res.status(400).json({
-      message: 'All fields are required and types must be a non-empty array',
+    // Create a new movie object
+    const movie = new Movie({
+      title,
+      description,
+      types,
+      // averageRating and reviews will use default values in the schema
     });
+
+    // Save the movie to the database
+    await movie.save();
+
+    // Return the created movie
+    res.status(201).json(movie); // will include _id and timestamps
+  } catch (error) {
+    logger.error('Create movie failed', error);
+
+    // 'CastError': `types` is defined as an array in the schema, so if a non-array value is provided, a CastError will be thrown. 'CastError' is an error thrown by Mongoose whenever it attempts to 'cast' one data type to another data type defined in the Schema (blueprint) and fails.
+    if (error.name === 'ValidationError' || error.name === 'CastError') {
+      return res
+        .status(400)
+        .json({ message: 'Invalid request data', error: error.message });
+    }
+
+    res
+      .status(500)
+      .json({ message: 'Error creating movie', error: error.message });
   }
+};
 
-  // Create a new movie object
-  const newMovie = {
-    id: nextMovieId++,
-    title,
-    description,
-    types,
-    averageRating: 0,
-    reviews: [],
-  };
+/**
+ * @swagger
+ * /v1/movies/{id}:
+ *   patch:
+ *     summary: Update a movie by ID
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the movie to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               types:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Movie successfully updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Movie'
+ *       400:
+ *         description: Invalid request body
+ *       404:
+ *         description: Movie not found
+ */
+const updateMovie = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  // Add the new movie to the beginning of the movies array
-  movies.unshift(newMovie);
+    const updatedMovie = await Movie.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
-  // Return the created movie
-  res.status(201).json(newMovie);
+    if (!updatedMovie) {
+      return res.status(404).json({ message: 'Movie not found' });
+    }
+
+    res.status(200).json(updatedMovie);
+  } catch (error) {
+    logger.error('Update movie failed', error);
+
+    // 'CastError' occurs when the provided id is not a valid ObjectId (verify id format)
+    if (error.name === 'ValidationError' || error.name === 'CastError') {
+      return res
+        .status(400)
+        .json({ message: 'Invalid request data', error: error.message });
+    }
+
+    res
+      .status(500)
+      .json({ message: 'Error updating movie', error: error.message });
+  }
 };
 
 /**
@@ -151,7 +352,7 @@ const createMovie = (req, res) => {
  *       - in: path
  *         name: id
  *         schema:
- *           type: integer
+ *           type: string
  *         required: true
  *         description: ID of the movie to be deleted
  *     responses:
@@ -160,16 +361,23 @@ const createMovie = (req, res) => {
  *       404:
  *         description: Movie not found
  */
-const deleteMovie = (req, res) => {
-  const movieId = parseInt(req.params.id);
-  const movieIndex = movies.findIndex((movie) => movie.id === movieId);
-  // If movie not found, return 404
-  if (movieIndex === -1) {
-    return res.status(404).json({ message: 'Movie not found' });
+const deleteMovie = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedMovie = await Movie.findByIdAndDelete(id);
+
+    // If no movie found to delete, .findByIdAndDelete function will return null
+    if (!deletedMovie) {
+      return res.status(404).json({ message: 'Movie not found' });
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: 'Error deleting movie', error: error.message });
   }
-  // Remove the movie from the array
-  movies.splice(movieIndex, 1);
-  res.status(204).send();
 };
 
 /**
@@ -237,176 +445,6 @@ const createReview = (req, res) => {
 
   // Return the created review
   res.status(201).json(newReview);
-};
-
-/**
- * @swagger
- * /v1/movies:
- *   get:
- *     summary: Get list of movies with filtering, sorting, and pagination
- *     tags: [Movies]
- *     parameters:
- *       - in: query
- *         name: keyword
- *         schema:
- *           type: string
- *         description: Keyword to filter movies by title or description
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *           enum: [rating, -rating]
- *         description: Sort by rating (ascending) or -rating (descending)
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Page number for pagination
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Number of movies per page
- *     responses:
- *       200:
- *         description: List of movies
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Movie'
- */
-const getMovies = (req, res) => {
-  // Extract query parameters
-  let { keyword, sort, page, limit } = req.query;
-  page = parseInt(page) || 1;
-  limit = parseInt(limit) || 10;
-
-  // Prepare a copy of the movie array for manipulation
-  let filteredMovies = [...movies];
-
-  // Filtering
-  if (keyword) {
-    keyword = keyword.toLowerCase();
-    filteredMovies = filteredMovies.filter(
-      (movie) =>
-        movie.title.toLowerCase().includes(keyword) ||
-        movie.description.toLowerCase().includes(keyword)
-    );
-  }
-
-  // Sorting
-  if (sort === 'rating') {
-    filteredMovies.sort((a, b) => a.averageRating - b.averageRating);
-  } else if (sort === '-rating') {
-    filteredMovies.sort((a, b) => b.averageRating - a.averageRating);
-  }
-
-  // Pagination
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedMovies = filteredMovies.slice(startIndex, endIndex);
-
-  // Return the result
-  res.json(paginatedMovies);
-};
-
-/**
- * @swagger
- * /v1/movies/{id}:
- *   get:
- *     summary: Get a movie by ID
- *     tags: [Movies]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID of the movie to retrieve
- *     responses:
- *       200:
- *         description: Movie details
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Movie'
- *       404:
- *         description: Movie not found
- */
-const getMovieById = (req, res) => {
-  const movie = movies.find((m) => m.id === parseInt(req.params.id));
-
-  if (!movie) {
-    return res.status(404).json({ message: 'Movie not found' });
-  }
-
-  res.json(movie);
-};
-
-/**
- * @swagger
- * /v1/movies/{id}:
- *   put:
- *     summary: Update a movie by ID
- *     tags: [Movies]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID of the movie to update
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               description:
- *                 type: string
- *               types:
- *                 type: array
- *                 items:
- *                   type: string
- *     responses:
- *       200:
- *         description: Movie successfully updated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Movie'
- *       400:
- *         description: Invalid request body
- *       404:
- *         description: Movie not found
- */
-const updateMovie = (req, res) => {
-  const movie = movies.find((m) => m.id === parseInt(req.params.id));
-  if (!movie) {
-    return res.status(404).json({ message: 'movie not found' });
-  }
-
-  const { title, description, types } = req.body;
-  if (title) {
-    movie.title = title;
-  }
-  if (description) {
-    movie.description = description;
-  }
-  if (types) {
-    if (!Array.isArray(types)) {
-      return res.status(400).json({ message: 'types must be an array' });
-    }
-    movie.types = types;
-  }
-  res.json(movie);
 };
 
 /**

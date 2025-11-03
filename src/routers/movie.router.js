@@ -8,7 +8,7 @@ movieRouter.delete('/:id', movieController.deleteMovie);
 movieRouter.post('/:id/reviews', movieController.createReview);
 movieRouter.get('/', movieController.getMovies);
 movieRouter.get('/:id', movieController.getMovieById);
-movieRouter.put('/:id', movieController.updateMovie);
+movieRouter.patch('/:id', movieController.updateMovie);
 movieRouter.get('/:id/reviews', movieController.getMovieReviews);
 
 module.exports = movieRouter;
