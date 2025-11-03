@@ -14,6 +14,85 @@ module.exports = swaggerJsDoc({
         description: 'local dev server',
       },
     ],
+    tags: [
+      {
+        name: 'Movies',
+        description: 'Movie management API',
+      },
+      {
+        name: 'Reviews',
+        description: 'Movie review management API',
+      },
+    ],
+    components: {
+      schemas: {
+        Movie: {
+          type: 'object',
+          required: ['title', 'description', 'types'],
+          properties: {
+            id: {
+              type: 'string',
+              description: 'Automatically generated Mongoose ObjectId',
+            },
+            title: { type: 'string', description: 'Movie title' },
+            description: {
+              type: 'string',
+              description: 'Movie description',
+            },
+            types: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Movie genres',
+            },
+            averageRating: {
+              type: 'number',
+              format: 'float',
+              description: 'Average rating of the movie',
+            },
+            reviews: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/Review' },
+              description: 'List of reviews for the movie',
+            },
+          },
+        },
+        Review: {
+          type: 'object',
+          required: ['rating', 'content'],
+          properties: {
+            id: {
+              type: 'string',
+              description:
+                'Automatically generated Mongoose ObjectId (subdocument)',
+            },
+            rating: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 5,
+              description: 'Rating given to the movie (1-5)',
+            },
+            content: { type: 'string', description: 'Review content' },
+          },
+        },
+        NewMovie: {
+          type: 'object',
+          required: ['title', 'description', 'types'],
+          properties: {
+            title: { type: 'string' },
+            description: { type: 'string' },
+            types: { type: 'array', items: { type: 'string' } },
+          },
+        },
+        NewReview: {
+          type: 'object',
+          required: ['rating', 'content'],
+          properties: {
+            rating: { type: 'integer', minimum: 1, maximum: 5 },
+            content: { type: 'string' },
+          },
+        },
+      },
+    },
   },
   apis: ['./src/controllers/*.js'], // path
 });
