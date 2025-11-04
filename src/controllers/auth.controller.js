@@ -72,8 +72,63 @@ const register = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /v1/auth/login:
+ *   post:
+ *     summary: Log in a user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserLogin'
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthToken'
+ *       401:
+ *         description: Invalid username or password
+ */
 const login = async (req, res, next) => {
-  // TODO:
+  try {
+    const { username, password } = req.body;
+
+    // 1. Find the user by username
+    const user = await User.findOne({ username });
+
+    // 2. Check 1: Does the user exist?
+    // For security reasons, we don't tell the user whether it was the "username" or "password" that was wrong
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    // 3. Check 2: Does the password match?
+    // Use the instance method we defined in user.model.js
+    const isMatch = await user.validatePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    // 4. Login successful! Define the payload (including role, for RBAC preparation)
+    const payload = {
+      id: user._id,
+      role: user.role,
+    };
+
+    // 5. Generate the token
+    const token = generateToken(payload);
+
+    // 6. Return the token
+    res.status(200).json({ token });
+  } catch (error) {
+    logger.error('Login failed', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 };
 
 module.exports = {
