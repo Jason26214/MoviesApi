@@ -85,10 +85,13 @@ module.exports = swaggerJsDoc({
         },
         NewReview: {
           type: 'object',
-          required: ['rating', 'content'],
+          required: ['rating'],
           properties: {
             rating: { type: 'integer', minimum: 1, maximum: 5 },
-            content: { type: 'string' },
+            content: {
+              type: 'string',
+              description: 'Optional review content (defaults to "")',
+            },
           },
         },
       },
