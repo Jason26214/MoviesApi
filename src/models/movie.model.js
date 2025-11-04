@@ -13,6 +13,14 @@ const reviewSchema = new Schema(
       min: 1,
       max: 5,
     },
+    // who wrote the review
+    author: {
+      // This is the standard data type in Mongoose for storing the _id of other documents
+      type: Schema.Types.ObjectId,
+      // Tell Mongoose that this ID references the 'User' model
+      ref: 'User',
+      required: true,
+    },
   },
   {
     timestamps: true,

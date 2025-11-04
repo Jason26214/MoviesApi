@@ -110,7 +110,7 @@ const createReview = async (req, res) => {
       return res.status(404).json({ message: 'Movie not found' });
     }
 
-    const newReview = { content, rating };
+    const newReview = { content, rating, author: req.user.id };
     movie.reviews.push(newReview);
 
     updateAverageRating(movie);
