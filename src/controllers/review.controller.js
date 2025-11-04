@@ -188,6 +188,19 @@ const updateReview = async (req, res) => {
       return res.status(404).json({ message: 'Review not found' });
     }
 
+    // --- Added ABAC permission checks ---
+    // Check: 1. Is the current user the author? 2. Is the current user an administrator?
+    if (review.author.toString() !== req.user.id && req.user.role !== 'admin') {
+      logger.warn(
+        `Permission denied: User ${req.user.id} is not the author or an admin.`
+      );
+      // If *neither* condition is met, return 403 Forbidden
+      return res.status(403).json({
+        message: 'Forbidden: You can only update your own reviews.',
+      });
+    }
+    // --- New logic end ---
+
     if (content != undefined) {
       review.content = content;
     }
@@ -252,6 +265,19 @@ const deleteReview = async (req, res) => {
     if (!review) {
       return res.status(404).json({ message: 'Review not found' });
     }
+
+    // --- Added ABAC permission checks ---
+    // Check: 1. Is the current user the author? 2. Is the current user an administrator?
+    if (review.author.toString() !== req.user.id && req.user.role !== 'admin') {
+      logger.warn(
+        `Permission denied: User ${req.user.id} is not the author or an admin.`
+      );
+      // If *neither* condition is met, return 403 Forbidden
+      return res.status(403).json({
+        message: 'Forbidden: You can only delete your own reviews.',
+      });
+    }
+    // --- New logic end ---
 
     await review.deleteOne();
 
