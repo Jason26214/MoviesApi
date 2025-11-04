@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('./config');
+const { logger } = require('./logger');
 
 // Get the JWT_SECRET from config.js, which is defined in our .env file
 const secret = config.JWT_SECRET;
@@ -27,7 +28,8 @@ const validateToken = (token) => {
     const payload = jwt.verify(token, secret);
     return payload;
   } catch (e) {
-    // If the token is invalid (e.g., expired, signature error), jwt.verify will throw an error.
+    logger.error('Token validation failed!', { error: e.message });
+
     return null;
   }
 };

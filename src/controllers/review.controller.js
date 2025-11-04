@@ -70,6 +70,8 @@ const getMovieReviews = async (req, res) => {
  *   post:
  *     summary: Create a review for a movie
  *     tags: [Reviews]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -92,6 +94,8 @@ const getMovieReviews = async (req, res) => {
  *               $ref: '#/components/schemas/Review'
  *       400:
  *         description: Invalid request body
+ *       401:
+ *         description: Unauthorized (not logged in)
  *       404:
  *         description: Movie not found
  */
@@ -135,6 +139,8 @@ const createReview = async (req, res) => {
  *   patch:
  *     summary: Update a review by its ID
  *     tags: [Reviews]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -157,6 +163,10 @@ const createReview = async (req, res) => {
  *               $ref: '#/components/schemas/Review'
  *       400:
  *         description: Invalid request body
+ *       401:
+ *         description: Unauthorized (not logged in)
+ *       403:
+ *         description: Forbidden (not review author or admin)
  *       404:
  *         description: Review not found
  */
@@ -210,6 +220,8 @@ const updateReview = async (req, res) => {
  *   delete:
  *     summary: Delete a review by its ID
  *     tags: [Reviews]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -220,6 +232,10 @@ const updateReview = async (req, res) => {
  *     responses:
  *       204:
  *         description: Review successfully deleted (No Content)
+ *       401:
+ *         description: Unauthorized (not logged in)
+ *       403:
+ *         description: Forbidden (not review author or admin)
  *       404:
  *         description: Review not found
  */

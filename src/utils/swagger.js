@@ -122,6 +122,14 @@ module.exports = swaggerJsDoc({
           },
         },
       },
+      // securitySchemes
+      securitySchemes: {
+        BearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
     },
   },
   apis: ['./src/controllers/*.js'], // path

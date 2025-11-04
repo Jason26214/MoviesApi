@@ -134,6 +134,8 @@ const getMovieById = async (req, res) => {
  *   post:
  *     summary: Create a new movie
  *     tags: [Movies]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -149,6 +151,10 @@ const getMovieById = async (req, res) => {
  *               $ref: '#/components/schemas/Movie'
  *       400:
  *         description: Invalid request body
+ *       401:
+ *         description: Unauthorized (not logged in)
+ *       403:
+ *         description: Forbidden (not an admin)
  */
 const createMovie = async (req, res) => {
   try {
@@ -189,6 +195,8 @@ const createMovie = async (req, res) => {
  *   patch:
  *     summary: Update a movie by ID
  *     tags: [Movies]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -220,6 +228,10 @@ const createMovie = async (req, res) => {
  *               $ref: '#/components/schemas/Movie'
  *       400:
  *         description: Invalid request body
+ *       401:
+ *         description: Unauthorized (not logged in)
+ *       403:
+ *         description: Forbidden (not an admin)
  *       404:
  *         description: Movie not found
  */
@@ -259,6 +271,8 @@ const updateMovie = async (req, res) => {
  *   delete:
  *     summary: Delete a movie by its ID
  *     tags: [Movies]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -269,6 +283,10 @@ const updateMovie = async (req, res) => {
  *     responses:
  *       204:
  *         description: Movie deleted successfully, no content returned
+ *       401:
+ *         description: Unauthorized (not logged in)
+ *       403:
+ *         description: Forbidden (not an admin)
  *       404:
  *         description: Movie not found
  */
