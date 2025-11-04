@@ -23,6 +23,10 @@ module.exports = swaggerJsDoc({
         name: 'Reviews',
         description: 'Movie review management API',
       },
+      {
+        name: 'Auth',
+        description: 'Authentication and Authorization',
+      },
     ],
     components: {
       schemas: {
@@ -92,6 +96,29 @@ module.exports = swaggerJsDoc({
               type: 'string',
               description: 'Optional review content (defaults to "")',
             },
+          },
+        },
+        // Auth-related Schemas
+        NewUser: {
+          type: 'object',
+          required: ['username', 'password'],
+          properties: {
+            username: { type: 'string' },
+            password: { type: 'string' },
+          },
+        },
+        UserLogin: {
+          type: 'object',
+          required: ['username', 'password'],
+          properties: {
+            username: { type: 'string' },
+            password: { type: 'string' },
+          },
+        },
+        AuthToken: {
+          type: 'object',
+          properties: {
+            token: { type: 'string', description: 'JWT token' },
           },
         },
       },
