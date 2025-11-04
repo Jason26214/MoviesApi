@@ -240,7 +240,7 @@ const updateMovie = async (req, res) => {
     const { id } = req.params;
 
     const updatedMovie = await Movie.findByIdAndUpdate(id, req.body, {
-      new: true,
+      new: true, // Ensure the updated document is returned, not the old one
       runValidators: true,
     });
 
