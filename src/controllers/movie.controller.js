@@ -1,8 +1,6 @@
 // import the Movie model
 const Movie = require('../models/movie.model');
-const { createLogger } = require('../utils/logger');
-
-const logger = createLogger(__filename);
+const NotFoundException = require('../exceptions/notFound.exception');
 
 /**
  * @swagger
@@ -44,7 +42,7 @@ const logger = createLogger(__filename);
  *               items:
  *                 $ref: '#/components/schemas/Movie'
  */
-const getMovies = async (req, res) => {
+const getMovies = async (req, res, next) => {
   try {
     // Extract query parameters
     let { keyword, sort, page, limit } = req.query;
@@ -81,9 +79,7 @@ const getMovies = async (req, res) => {
     // Status and return
     res.status(200).json(movies);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Error fetching movies', error: error.message });
+    next(error);
   }
 };
 
@@ -110,21 +106,19 @@ const getMovies = async (req, res) => {
  *       404:
  *         description: Movie not found
  */
-const getMovieById = async (req, res) => {
+const getMovieById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const movie = await Movie.findById(id);
 
     // If the database does not find a document corresponding to that _id, it will not throw an error, but will return null.
     if (!movie) {
-      return res.status(404).json({ message: 'Movie not found' });
+      return next(new NotFoundException('Movie not found'));
     }
 
     res.status(200).json(movie);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Error fetching movie by ID', error: error.message });
+    next(error);
   }
 };
 
@@ -156,7 +150,7 @@ const getMovieById = async (req, res) => {
  *       403:
  *         description: Forbidden (not an admin)
  */
-const createMovie = async (req, res) => {
+const createMovie = async (req, res, next) => {
   try {
     const { title, description, types } = req.body;
 
@@ -174,18 +168,9 @@ const createMovie = async (req, res) => {
     // Return the created movie
     res.status(201).json(movie); // will include _id and timestamps
   } catch (error) {
-    logger.error('Create movie failed', error);
-
+    // Mongoose validation errors or CastErrors are automatically caught by validationError.middleware
     // 'CastError': `types` is defined as an array in the schema, so if a non-array value is provided, a CastError will be thrown. 'CastError' is an error thrown by Mongoose whenever it attempts to 'cast' one data type to another data type defined in the Schema (blueprint) and fails.
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return res
-        .status(400)
-        .json({ message: 'Invalid request data', error: error.message });
-    }
-
-    res
-      .status(500)
-      .json({ message: 'Error creating movie', error: error.message });
+    next(error);
   }
 };
 
@@ -235,7 +220,7 @@ const createMovie = async (req, res) => {
  *       404:
  *         description: Movie not found
  */
-const updateMovie = async (req, res) => {
+const updateMovie = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -245,23 +230,12 @@ const updateMovie = async (req, res) => {
     });
 
     if (!updatedMovie) {
-      return res.status(404).json({ message: 'Movie not found' });
+      return next(new NotFoundException('Movie not found'));
     }
 
     res.status(200).json(updatedMovie);
   } catch (error) {
-    logger.error('Update movie failed', error);
-
-    // 'CastError' occurs when the provided id is not a valid ObjectId (verify id format)
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return res
-        .status(400)
-        .json({ message: 'Invalid request data', error: error.message });
-    }
-
-    res
-      .status(500)
-      .json({ message: 'Error updating movie', error: error.message });
+    next(error);
   }
 };
 
@@ -290,7 +264,7 @@ const updateMovie = async (req, res) => {
  *       404:
  *         description: Movie not found
  */
-const deleteMovie = async (req, res) => {
+const deleteMovie = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -298,14 +272,12 @@ const deleteMovie = async (req, res) => {
 
     // If no movie found to delete, .findByIdAndDelete function will return null
     if (!deletedMovie) {
-      return res.status(404).json({ message: 'Movie not found' });
+      return next(new NotFoundException('Movie not found'));
     }
 
     res.status(204).send();
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Error deleting movie', error: error.message });
+    next(error);
   }
 };
 

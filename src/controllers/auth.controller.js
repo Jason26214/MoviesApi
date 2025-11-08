@@ -1,8 +1,6 @@
 const User = require('../models/user.model.js');
 const { generateToken } = require('../utils/jwt');
-const { createLogger } = require('../utils/logger');
-
-const logger = createLogger(__filename);
+const ConflictsException = require('../exceptions/conflicts.exception');
 
 /**
  * @swagger
@@ -50,25 +48,12 @@ const register = async (req, res, next) => {
     // 5. Return 201 Created and the token
     res.status(201).json({ token });
   } catch (error) {
-    logger.error('Registration failed', error);
-
-    // Mongoose validation error (e.g., username not provided)
-    if (error.name === 'ValidationError') {
-      return res
-        .status(400)
-        .json({ message: 'Validation failed', error: error.message });
-    }
-
-    // This is a new and very important error handling!
-    // "11000" is the error code for "unique key violation" in MongoDB
-    // (because we set username: { unique: true } in user.model.js)
+    // Mongoose "unique key violation"
     if (error.code === 11000) {
-      return res.status(400).json({
-        message: 'Username already exists',
-      });
+      return next(new ConflictsException('Username already exists'));
     }
 
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
@@ -104,14 +89,18 @@ const login = async (req, res, next) => {
     // 2. Check 1: Does the user exist?
     // For security reasons, we don't tell the user whether it was the "username" or "password" that was wrong
     if (!user) {
-      return res.status(401).json({ message: 'Invalid username or password' });
+      return res
+        .status(401)
+        .json({ success: false, message: 'Invalid username or password' });
     }
 
     // 3. Check 2: Does the password match?
     // Use the instance method we defined in user.model.js
     const isMatch = await user.validatePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid username or password' });
+      return res
+        .status(401)
+        .json({ success: false, message: 'Invalid username or password' });
     }
 
     // 4. Login successful! Define the payload (including role, for RBAC preparation)
@@ -126,8 +115,7 @@ const login = async (req, res, next) => {
     // 6. Return the token
     res.status(200).json({ token });
   } catch (error) {
-    logger.error('Login failed', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
