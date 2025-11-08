@@ -9,6 +9,7 @@ const helmet = require('helmet');
 const morganMiddleware = require('./middleware/morgan');
 const { logger } = require('./utils/logger');
 
+const successResponseMiddleware = require('./middleware/successResponse.middleware');
 const v1Router = require('./routers');
 const errorMiddleware = require('./middleware/error');
 
@@ -32,6 +33,9 @@ app.use(morganMiddleware);
 app.use(express.json());
 app.use(cors());
 app.use(compression());
+
+// To "enchant" the `res` object before it enters the Controller, this middleware must be registered before the Router
+app.use(successResponseMiddleware);
 
 app.use(
   '/api-docs',
