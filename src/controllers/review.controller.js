@@ -56,7 +56,7 @@ const getMovieReviews = async (req, res, next) => {
       return next(new NotFoundException('Movie not found'));
     }
 
-    res.status(200).json(movie.reviews);
+  res.success(200, movie.reviews);
   } catch (error) {
     next(error);
   }
@@ -115,7 +115,7 @@ const createReview = async (req, res, next) => {
 
     await movie.save();
 
-    res.status(201).json(movie.reviews[movie.reviews.length - 1]);
+  res.success(201, movie.reviews[movie.reviews.length - 1]);
   } catch (error) {
     next(error);
   }
@@ -200,7 +200,7 @@ const updateReview = async (req, res, next) => {
 
     await movie.save();
 
-    res.status(200).json(review);
+  res.success(200, review);
   } catch (error) {
     next(error);
   }
@@ -265,7 +265,7 @@ const deleteReview = async (req, res, next) => {
 
     await movie.save();
 
-    res.status(204).send();
+  res.success(204);
   } catch (error) {
     next(error);
   }
