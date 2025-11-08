@@ -10,9 +10,11 @@ const morganMiddleware = require('./middleware/morgan');
 const { logger } = require('./utils/logger');
 
 const v1Router = require('./routers');
+const errorMiddleware = require('./middleware/error');
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./utils/swagger');
+const { error } = require('winston');
 
 const swaggerCustomCss = `
   .swagger-ui .opblock-body pre.microlight { font-size: 17px; }
@@ -36,7 +38,12 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, { customCss: swaggerCustomCss })
 );
+
 app.use('/v1', v1Router);
+
+errorMiddleware.forEach((handler) => {
+  app.use(handler);
+});
 
 connectToDB();
 
