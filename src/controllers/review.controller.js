@@ -56,7 +56,7 @@ const getMovieReviews = async (req, res, next) => {
       return next(new NotFoundException('Movie not found'));
     }
 
-  res.success(200, movie.reviews);
+    res.success(200, movie.reviews);
   } catch (error) {
     next(error);
   }
@@ -115,7 +115,7 @@ const createReview = async (req, res, next) => {
 
     await movie.save();
 
-  res.success(201, movie.reviews[movie.reviews.length - 1]);
+    res.success(201, movie.reviews[movie.reviews.length - 1]);
   } catch (error) {
     next(error);
   }
@@ -184,7 +184,7 @@ const updateReview = async (req, res, next) => {
       // If *neither* condition is met, return 403 Forbidden
       return res.status(403).json({
         success: false,
-        message: 'Forbidden: You can only update your own reviews.',
+        error: 'Forbidden: You can only update your own reviews.',
       });
     }
     // --- New logic end ---
@@ -200,7 +200,7 @@ const updateReview = async (req, res, next) => {
 
     await movie.save();
 
-  res.success(200, review);
+    res.success(200, review);
   } catch (error) {
     next(error);
   }
@@ -254,7 +254,7 @@ const deleteReview = async (req, res, next) => {
       // If *neither* condition is met, return 403 Forbidden
       return res.status(403).json({
         success: false,
-        message: 'Forbidden: You can only delete your own reviews.',
+        error: 'Forbidden: You can only delete your own reviews.',
       });
     }
     // --- New logic end ---
@@ -265,7 +265,7 @@ const deleteReview = async (req, res, next) => {
 
     await movie.save();
 
-  res.success(204);
+    res.success(204);
   } catch (error) {
     next(error);
   }

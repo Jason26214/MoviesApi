@@ -45,8 +45,8 @@ const register = async (req, res, next) => {
     // 4. Use the helper function from jwt.js to generate the token
     const token = generateToken(payload);
 
-  // 5. Return 201 Created and the token using standardized success response
-  res.success(201, { token });
+    // 5. Return 201 Created and the token using standardized success response
+    res.success(201, { token });
   } catch (error) {
     // Mongoose "unique key violation"
     if (error.code === 11000) {
@@ -91,7 +91,7 @@ const login = async (req, res, next) => {
     if (!user) {
       return res
         .status(401)
-        .json({ success: false, message: 'Invalid username or password' });
+        .json({ success: false, error: 'Invalid username or password' });
     }
 
     // 3. Check 2: Does the password match?
@@ -100,7 +100,7 @@ const login = async (req, res, next) => {
     if (!isMatch) {
       return res
         .status(401)
-        .json({ success: false, message: 'Invalid username or password' });
+        .json({ success: false, error: 'Invalid username or password' });
     }
 
     // 4. Login successful! Define the payload (including role, for RBAC preparation)
@@ -112,8 +112,8 @@ const login = async (req, res, next) => {
     // 5. Generate the token
     const token = generateToken(payload);
 
-  // 6. Return the token using standardized success response
-  res.success(200, { token });
+    // 6. Return the token using standardized success response
+    res.success(200, { token });
   } catch (error) {
     next(error);
   }
