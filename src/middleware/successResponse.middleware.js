@@ -1,10 +1,14 @@
+/**
+ * Add a `.success()` method to the `res` object for sending a standardized success response.
+ * @param {number} statusCode - HTTP status code (e.g., 200, 201).
+ * @param {object | array | string} data - The JSON payload to include in the 'data' field.
+ */
 const successResponseMiddleware = (req, res, next) => {
-  /**
-   * Add a `.success()` method to the `res` object for sending a standardized success response.
-   * @param {number} statusCode - HTTP status code (e.g., 200, 201).
-   * @param {object | array | string} data - The JSON payload to include in the 'data' field.
-   */
   res.success = function (statusCode, data) {
+    if (statusCode === 204) {
+      return res.status(204).end();
+    }
+
     return res.status(statusCode).json({
       success: true,
       data: data,
