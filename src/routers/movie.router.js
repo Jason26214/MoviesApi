@@ -2,8 +2,8 @@ const express = require('express');
 const movieRouter = express.Router();
 const movieController = require('../controllers/movie.controller');
 const reviewController = require('../controllers/review.controller');
-const authGuard = require('../middleware/authGuard');
-const roleGuard = require('../middleware/roleGuard');
+const authGuard = require('../middleware/authGuard.middleware');
+const roleGuard = require('../middleware/roleGuard.middleware');
 
 // Define movie routes
 movieRouter.get('/', movieController.getMovies);

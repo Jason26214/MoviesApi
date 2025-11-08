@@ -6,7 +6,7 @@ const cors = require('cors');
 const compression = require('compression');
 const helmet = require('helmet');
 
-const morganMiddleware = require('./middleware/morgan');
+const morganMiddleware = require('./middleware/morgan.middleware');
 const { logger } = require('./utils/logger');
 
 const successResponseMiddleware = require('./middleware/successResponse.middleware');

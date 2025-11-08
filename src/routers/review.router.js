@@ -1,6 +1,6 @@
 const express = require('express');
 const reviewRouter = express.Router();
-const authGuard = require('../middleware/authGuard');
+const authGuard = require('../middleware/authGuard.middleware');
 
 const {
   updateReview,
