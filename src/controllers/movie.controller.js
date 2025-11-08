@@ -76,8 +76,8 @@ const getMovies = async (req, res, next) => {
       .limit(limit)
       .exec();
 
-    // Status and return
-    res.status(200).json(movies);
+    // Status and return using standardized success response
+    res.success(200, movies);
   } catch (error) {
     next(error);
   }
@@ -116,7 +116,7 @@ const getMovieById = async (req, res, next) => {
       return next(new NotFoundException('Movie not found'));
     }
 
-    res.status(200).json(movie);
+    res.success(200, movie);
   } catch (error) {
     next(error);
   }
@@ -166,7 +166,7 @@ const createMovie = async (req, res, next) => {
     await movie.save();
 
     // Return the created movie
-    res.status(201).json(movie); // will include _id and timestamps
+    res.success(201, movie); // will include _id and timestamps
   } catch (error) {
     // Mongoose validation errors or CastErrors are automatically caught by validationError.middleware
     // 'CastError': `types` is defined as an array in the schema, so if a non-array value is provided, a CastError will be thrown. 'CastError' is an error thrown by Mongoose whenever it attempts to 'cast' one data type to another data type defined in the Schema (blueprint) and fails.
@@ -233,7 +233,7 @@ const updateMovie = async (req, res, next) => {
       return next(new NotFoundException('Movie not found'));
     }
 
-    res.status(200).json(updatedMovie);
+    res.success(200, updatedMovie);
   } catch (error) {
     next(error);
   }
@@ -275,7 +275,7 @@ const deleteMovie = async (req, res, next) => {
       return next(new NotFoundException('Movie not found'));
     }
 
-    res.status(204).send();
+    res.success(204);
   } catch (error) {
     next(error);
   }

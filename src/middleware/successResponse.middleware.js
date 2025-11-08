@@ -4,7 +4,7 @@
  * @param {object | array | string} data - The JSON payload to include in the 'data' field.
  */
 const successResponseMiddleware = (req, res, next) => {
-  res.success = function (statusCode, data) {
+  res.success = function (statusCode, data = null) {
     if (statusCode === 204) {
       return res.status(204).end();
     }

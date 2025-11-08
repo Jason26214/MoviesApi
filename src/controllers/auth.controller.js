@@ -45,8 +45,8 @@ const register = async (req, res, next) => {
     // 4. Use the helper function from jwt.js to generate the token
     const token = generateToken(payload);
 
-    // 5. Return 201 Created and the token
-    res.status(201).json({ token });
+  // 5. Return 201 Created and the token using standardized success response
+  res.success(201, { token });
   } catch (error) {
     // Mongoose "unique key violation"
     if (error.code === 11000) {
@@ -112,8 +112,8 @@ const login = async (req, res, next) => {
     // 5. Generate the token
     const token = generateToken(payload);
 
-    // 6. Return the token
-    res.status(200).json({ token });
+  // 6. Return the token using standardized success response
+  res.success(200, { token });
   } catch (error) {
     next(error);
   }
